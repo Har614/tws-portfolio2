@@ -1,9 +1,9 @@
-name: Portfolio CI/CD Pipeline
+name: Portfolio Deployment Pipeline
 
 on:
   push:
     branches:
-      - main  # Triggers the workflow whenever you push to the main branch
+      - main  # Triggers when you push to the main branch
 
 jobs:
   deploy:
@@ -13,18 +13,7 @@ jobs:
     - name: Checkout Repository Code
       uses: actions/checkout@v4
 
-    # OPTIONAL: If your project needs to be compiled/built before deployment
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        
-    - name: Install Dependencies and Build Project
-      run: |
-        npm install
-        npm run build --if-present
-
-    - name: Executing Remote SSH Commands to Deploy
+    - name: Deploy to EC2 via SSH
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.EC2_HOST }}
@@ -32,23 +21,5 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         port: 22
         script: |
-          # 1. Navigate to application folder or clone it if it doesn't exist
-          if [ ! -d "tws-portfolio2" ]; then
-            git clone https://github.com/Har614/tws-portfolio2.git
-            cd tws-portfolio2
-          else
-            cd tws-portfolio2
-            git pull origin main
-          fi
-
-          # 2. Install production dependencies
-          npm install --production
-
-          # 3. Handle Running the Application
-          # IF STATIC SITE: Move build folder to Nginx web root
-          # sudo cp -r build/* /var/www/html/   # Uncomment if using standard React build
-          # sudo cp -r dist/* /var/www/html/    # Uncomment if using Vite build
-          
-          # IF NODE/NEXTJS APP: Restart the background process with PM2
-          pm2 delete portfolio || true
-          pm2 start npm --name "portfolio" -- start
+          cd /home/ubuntu/tws-portfolio2
+          git pull origin main
